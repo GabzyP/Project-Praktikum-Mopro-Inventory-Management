@@ -7,6 +7,8 @@ import 'pages/produk/tambah_produk_page.dart';
 import 'pages/stok/stok_masuk_page.dart';
 import 'pages/stok/stok_keluar_page.dart';
 import 'pages/laporan/laporan_page.dart';
+import 'pages/other/notification_page.dart';
+import 'pages/other/profile_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +40,8 @@ class MyApp extends StatelessWidget {
         '/stok-masuk': (context) => const StokMasukPage(),
         '/stok-keluar': (context) => const StokKeluarPage(),
         '/laporan': (context) => LaporanPage(),
+        '/notifikasi': (context) => const NotificationPage(),
+        '/profil': (context) => const ProfilePage(),
       },
     );
   }
