@@ -5,18 +5,31 @@ class NotificationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<String> notifications = [];
-
     return Scaffold(
-      appBar: AppBar(title: const Text("Notifikasi")),
-      body: notifications.isEmpty
-          ? const Center(child: Text("Belum ada notifikasi baru"))
-          : ListView.builder(
-              itemCount: notifications.length,
-              itemBuilder: (context, index) {
-                return ListTile(title: Text(notifications[index]));
-              },
+      backgroundColor: const Color(0xfff8f9fd),
+      appBar: AppBar(
+        title: const Text("Notifikasi", style: TextStyle(color: Colors.black)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
+      body: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.notifications_off_outlined,
+              size: 60,
+              color: Colors.grey,
             ),
+            SizedBox(height: 16),
+            Text(
+              "Belum ada notifikasi baru",
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
