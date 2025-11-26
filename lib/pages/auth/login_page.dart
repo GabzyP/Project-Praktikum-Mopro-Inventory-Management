@@ -1,165 +1,160 @@
 import 'package:flutter/material.dart';
-import '../dashboard/dashboard_page.dart';
+import '../../services/api_service.dart';
+import 'register_page.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final emailC = TextEditingController();
-    final passC = TextEditingController();
+  State<LoginPage> createState() => _LoginPageState();
+}
 
+class _LoginPageState extends State<LoginPage> {
+  final emailC = TextEditingController();
+  final passC = TextEditingController();
+  final ApiService apiService = ApiService();
+  bool isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xffeef2ff), Color(0xfff7f9ff)],
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Container(
-              width: 420,
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 15,
-                    offset: const Offset(0, 6),
+      body: Center(
+        child: SingleChildScrollView(
+          child: Container(
+            width: 400,
+            padding: const EdgeInsets.all(40),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    shape: BoxShape.circle,
                   ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.blue.withOpacity(0.1),
-                    ),
-                    child: const Icon(
-                      Icons.inventory_2_rounded,
-                      size: 40,
-                      color: Colors.blue,
-                    ),
+                  child: const Icon(
+                    Icons.inventory_2_rounded,
+                    size: 50,
+                    color: Colors.blue,
                   ),
-                  const SizedBox(height: 20),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  "Selamat Datang",
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                ),
+                const Text(
+                  "Masuk untuk mengelola inventori",
+                  style: TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 40),
 
-                  const Text(
-                    "Inventori Barang",
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    "Masuk ke akun Anda",
-                    style: TextStyle(color: Colors.black54, fontSize: 15),
-                  ),
-                  const SizedBox(height: 32),
-
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Email",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade700,
-                      ),
+                TextField(
+                  controller: emailC,
+                  decoration: InputDecoration(
+                    labelText: "Email",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: emailC,
-                    decoration: InputDecoration(
-                      hintText: "nama@email.com",
-                      filled: true,
-                      fillColor: const Color(0xfff1f3f6),
-                      border: OutlineInputBorder(
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: passC,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: "Password",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    prefixIcon: const Icon(Icons.lock_outline),
+                  ),
+                ),
+                const SizedBox(height: 30),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: isLoading ? null : _handleLogin,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
                       ),
                     ),
+                    child: isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                            "MASUK",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
                   ),
-                  const SizedBox(height: 18),
+                ),
+                const SizedBox(height: 24),
 
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Password",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: passC,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      hintText: "••••••••",
-                      filled: true,
-                      fillColor: const Color(0xfff1f3f6),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Belum punya akun?"),
+                    TextButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/dashboard');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (c) => const RegisterPage(),
+                          ),
+                        );
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xff2763ff),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        "Masuk",
-                        style: TextStyle(fontSize: 16, color: Colors.white),
-                      ),
+                      child: const Text("Daftar Sekarang"),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Lupa password?",
-                        style: TextStyle(color: Colors.black54),
-                      ),
-                      TextButton(
-                        onPressed: () {},
-                        child: const Text(
-                          "Reset di sini",
-                          style: TextStyle(color: Color(0xff2763ff)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _handleLogin() async {
+    if (emailC.text.isEmpty || passC.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Email dan Password harus diisi")),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+    final result = await apiService.login(emailC.text, passC.text);
+    setState(() => isLoading = false);
+
+    if (result['success'] == true) {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Selamat datang, ${result['user']['name']}!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? "Login gagal"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
