@@ -17,7 +17,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const DashboardPage(), // Panggil Dashboard sebagai halaman awal
+      home: const DashboardPage(),
     );
   }
 }
+
