@@ -26,7 +26,6 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
     _fetchProducts();
   }
 
-  // Ambil data produk dari database
   void _fetchProducts() async {
     try {
       List<Product> products = await apiService.getProducts();
@@ -36,11 +35,6 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
       });
     } catch (e) {
       setState(() => isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Gagal mengambil data produk")),
-        );
-      }
     }
   }
 
@@ -65,7 +59,6 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
             ),
             const SizedBox(height: 6),
 
-            // DROPDOWN PRODUK
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
@@ -82,7 +75,6 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
                         value: selectedProduct,
                         hint: const Text("Pilih produk..."),
                         isExpanded: true,
-                        // Tampilkan Nama + Sisa Stok
                         items: daftarProduk.map((Product item) {
                           return DropdownMenuItem<Product>(
                             value: item,
@@ -96,11 +88,8 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
                             ),
                           );
                         }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedProduct = value;
-                          });
-                        },
+                        onChanged: (value) =>
+                            setState(() => selectedProduct = value),
                       ),
                     ),
             ),
@@ -132,7 +121,6 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
 
             const SizedBox(height: 30),
 
-            // TOMBOL SIMPAN
             SizedBox(
               width: double.infinity,
               height: 55,
@@ -168,7 +156,6 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
 
     int jumlahKeluar = int.tryParse(jumlahController.text) ?? 0;
 
-    // VALIDASI 1: Jumlah tidak boleh 0 atau minus
     if (jumlahKeluar <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Jumlah harus lebih dari 0")),
@@ -176,13 +163,10 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
       return;
     }
 
-    // VALIDASI 2: Stok tidak boleh minus (PENTING!)
     if (jumlahKeluar > selectedProduct!.stock) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "Stok tidak cukup! Sisa hanya ${selectedProduct!.stock}",
-          ),
+        const SnackBar(
+          content: Text("Stok tidak cukup!"),
           backgroundColor: Colors.red,
         ),
       );
@@ -191,37 +175,30 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
 
     setState(() => isSaving = true);
 
-    // LOGIC KURANGI STOK
-    Product updatedProduct = Product(
-      id: selectedProduct!.id,
-      name: selectedProduct!.name,
-      sku: selectedProduct!.sku,
-      category: selectedProduct!.category,
-      price: selectedProduct!.price,
-      stock: selectedProduct!.stock - jumlahKeluar, // STOK LAMA - KELUAR
+    bool success = await apiService.addTransaction(
+      selectedProduct!.id,
+      'OUT',
+      jumlahKeluar,
+      catatanController.text,
     );
-
-    bool success = await apiService.updateProduct(updatedProduct);
 
     setState(() => isSaving = false);
 
     if (success) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "Stok keluar berhasil. Sisa stok: ${updatedProduct.stock}",
-            ),
+          const SnackBar(
+            content: Text("Stok keluar berhasil dicatat!"),
             backgroundColor: Colors.blue,
           ),
         );
-        Navigator.pop(context); // Kembali ke dashboard
+        Navigator.pop(context);
       }
     } else {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text("Gagal mengupdate stok")));
+        ).showSnackBar(const SnackBar(content: Text("Gagal transaksi")));
       }
     }
   }

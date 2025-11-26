@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import '../../models/product_model.dart';
+import '../../models/transaksi_model.dart';
 import '../produk/tambah_produk_page.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -12,24 +13,30 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   final ApiService apiService = ApiService();
+
   List<Product> _allProducts = [];
   List<Product> _filteredProducts = [];
+  List<TransaksiModel> _allTransactions = [];
+
   bool isLoading = true;
   final TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _refreshProducts();
+    _loadData();
   }
 
-  void _refreshProducts() async {
+  void _loadData() async {
     setState(() => isLoading = true);
     try {
-      List<Product> products = await apiService.getProducts();
+      final products = await apiService.getProducts();
+      final transactions = await apiService.getTransactions();
+
       setState(() {
         _allProducts = products;
         _filteredProducts = products;
+        _allTransactions = transactions;
         isLoading = false;
       });
     } catch (e) {
@@ -57,16 +64,20 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    // LOGIC HITUNG DUMMY (Bisa diganti API real nanti)
     int totalProduk = _allProducts.length;
     int stokRendah = _allProducts.where((p) => p.stock < 5).length;
-    int stokMasuk = 0; // Dummy karena belum ada tabel transaksi
-    int stokKeluar = 0; // Dummy
 
-    // Responsive Grid
+    int totalStokMasuk = _allTransactions
+        .where((t) => t.type == 'IN')
+        .fold(0, (sum, item) => sum + item.amount);
+
+    int totalStokKeluar = _allTransactions
+        .where((t) => t.type == 'OUT')
+        .fold(0, (sum, item) => sum + item.amount);
+
     double screenWidth = MediaQuery.of(context).size.width;
-    int gridCount = screenWidth < 800 ? 2 : 4; // Tablet/Desktop 4 kolom
-    double childAspect = screenWidth < 600 ? 1.4 : 1.2; // Rasio kartu
+    int gridCount = screenWidth < 800 ? 2 : 4;
+    double childAspect = screenWidth < 600 ? 1.4 : 1.2;
 
     return Scaffold(
       backgroundColor: const Color(0xfff8f9fd),
@@ -81,17 +92,20 @@ class _DashboardPageState extends State<DashboardPage> {
           IconButton(
             icon: const Icon(Icons.notifications_none, color: Colors.black54),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Tidak ada notifikasi baru")),
-              );
+              Navigator.pushNamed(context, '/notifikasi');
             },
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10),
-            child: CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.blue,
-              child: Icon(Icons.person, size: 20, color: Colors.white),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: InkWell(
+              onTap: () {
+                Navigator.pushNamed(context, '/profil');
+              },
+              child: const CircleAvatar(
+                radius: 16,
+                backgroundColor: Colors.blue,
+                child: Icon(Icons.person, size: 20, color: Colors.white),
+              ),
             ),
           ),
         ],
@@ -99,7 +113,7 @@ class _DashboardPageState extends State<DashboardPage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-              onRefresh: () async => _refreshProducts(),
+              onRefresh: () async => _loadData(),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -118,7 +132,6 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // --- GRID KARTU DASHBOARD (PERSIS DESAIN) ---
                     GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -127,90 +140,95 @@ class _DashboardPageState extends State<DashboardPage> {
                       mainAxisSpacing: 16,
                       childAspectRatio: childAspect,
                       children: [
-                        summaryCard(
-                          "Total Produk",
-                          "$totalProduk",
-                          Icons.inventory_2_outlined,
-                          const Color(0xFF3B82F6),
+                        _HoverCard(
+                          title: "Total Produk",
+                          value: "$totalProduk",
+                          icon: Icons.inventory_2_outlined,
+                          color: const Color(0xFF3B82F6),
                         ),
-                        summaryCard(
-                          "Stok Masuk",
-                          "$stokMasuk",
-                          Icons.trending_up,
-                          const Color(0xFF10B981),
+                        _HoverCard(
+                          title: "Stok Masuk",
+                          value: "$totalStokMasuk",
+                          icon: Icons.trending_up,
+                          color: const Color(0xFF10B981),
                         ),
-                        summaryCard(
-                          "Stok Keluar",
-                          "$stokKeluar",
-                          Icons.trending_down,
-                          const Color(0xFF2563EB),
+                        _HoverCard(
+                          title: "Stok Keluar",
+                          value: "$totalStokKeluar",
+                          icon: Icons.trending_down,
+                          color: const Color(0xFF2563EB),
                         ),
-                        summaryCard(
-                          "Stok Rendah",
-                          "$stokRendah",
-                          Icons.warning_amber_rounded,
-                          const Color(0xFFF59E0B),
+                        _HoverCard(
+                          title: "Stok Rendah",
+                          value: "$stokRendah",
+                          icon: Icons.warning_amber_rounded,
+                          color: const Color(0xFFF59E0B),
                         ),
                       ],
                     ),
 
                     const SizedBox(height: 24),
 
-                    // --- TOMBOL MENU AKSI (BESAR & KECIL) ---
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2563EB),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 2,
+                        ),
+                        onPressed: () async {
+                          final result = await Navigator.pushNamed(
+                            context,
+                            '/tambah-produk',
+                          );
+                          if (result == true) _loadData();
+                        },
+                        icon: const Icon(Icons.add, color: Colors.white),
+                        label: const Text(
+                          "Tambah Barang Baru",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
                     Row(
                       children: [
                         Expanded(
-                          flex: 2, // Tombol Tambah lebih lebar
-                          child: SizedBox(
-                            height: 50,
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF2563EB),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                elevation: 0,
-                              ),
-                              onPressed: () async {
-                                final result = await Navigator.pushNamed(
-                                  context,
-                                  '/tambah-produk',
-                                );
-                                if (result == true) _refreshProducts();
-                              },
-                              icon: const Icon(Icons.add, color: Colors.white),
-                              label: const Text(
-                                "Tambah Barang",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 1,
-                          child: actionButton(
+                          child: _ActionButton(
                             "Stok Masuk",
                             Icons.arrow_downward,
-                            () => Navigator.pushNamed(context, '/stok-masuk'),
+                            () async {
+                              await Navigator.pushNamed(context, '/stok-masuk');
+                              _loadData();
+                            },
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          flex: 1,
-                          child: actionButton(
+                          child: _ActionButton(
                             "Stok Keluar",
                             Icons.arrow_upward,
-                            () => Navigator.pushNamed(context, '/stok-keluar'),
+                            () async {
+                              await Navigator.pushNamed(
+                                context,
+                                '/stok-keluar',
+                              );
+                              _loadData();
+                            },
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          flex: 1,
-                          child: actionButton(
+                          child: _ActionButton(
                             "Laporan",
                             Icons.description_outlined,
                             () => Navigator.pushNamed(context, '/laporan'),
@@ -229,7 +247,6 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                     const SizedBox(height: 12),
 
-                    // --- SEARCH BAR ---
                     TextField(
                       controller: searchController,
                       onChanged: _runFilter,
@@ -257,7 +274,6 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                     const SizedBox(height: 16),
 
-                    // --- LIST PRODUK ---
                     if (_filteredProducts.isEmpty)
                       Container(
                         width: double.infinity,
@@ -287,7 +303,26 @@ class _DashboardPageState extends State<DashboardPage> {
                         itemCount: _filteredProducts.length,
                         separatorBuilder: (c, i) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
-                          return productItem(context, _filteredProducts[index]);
+                          return _ProductItem(
+                            item: _filteredProducts[index],
+                            onEdit: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (c) => TambahProdukPage(
+                                    product: _filteredProducts[index],
+                                  ),
+                                ),
+                              );
+                              if (result == true) _loadData();
+                            },
+                            onDelete: () async {
+                              await apiService.deleteProduct(
+                                _filteredProducts[index].id,
+                              );
+                              _loadData();
+                            },
+                          );
                         },
                       ),
                   ],
@@ -296,68 +331,102 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
     );
   }
+}
 
-  // WIDGET KARTU UTAMA
-  Widget summaryCard(String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: Colors.white, size: 18),
-              ),
-            ],
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
+class _HoverCard extends StatefulWidget {
+  final String title, value;
+  final IconData icon;
+  final Color color;
+  const _HoverCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  State<_HoverCard> createState() => _HoverCardState();
+}
+
+class _HoverCardState extends State<_HoverCard> {
+  bool _isHovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovering = true),
+      onExit: (_) => setState(() => _isHovering = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        transform: _isHovering
+            ? (Matrix4.identity()..scale(1.03))
+            : Matrix4.identity(),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: widget.color,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: widget.color.withOpacity(0.4),
+              blurRadius: _isHovering ? 12 : 8,
+              offset: const Offset(0, 4),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(widget.icon, color: Colors.white, size: 18),
+                ),
+              ],
+            ),
+            Text(
+              widget.value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+}
 
-  // WIDGET TOMBOL MENU KECIL
-  Widget actionButton(String label, IconData icon, VoidCallback onTap) {
+class _ActionButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+  const _ActionButton(this.label, this.icon, this.onTap);
+
+  @override
+  Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
       child: Container(
         height: 50,
         decoration: BoxDecoration(
-          color: const Color(0xffeef2f6), // Abu kebiruan
+          color: const Color(0xffeef2f6),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -379,35 +448,49 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
+}
 
-  // WIDGET ITEM LIST PRODUK
-  Widget productItem(BuildContext context, Product item) {
+class _ProductItem extends StatelessWidget {
+  final Product item;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  const _ProductItem({
+    required this.item,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     bool isLowStock = item.stock < 5;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: isLowStock
+            ? Border.all(color: Colors.orange.shade200)
+            : Border.all(color: Colors.grey.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade100,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start, // Align top
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Icon Box
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xffeef2ff),
+              color: Colors.blue.shade50,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(
-              Icons.inventory_2_outlined,
-              color: Color(0xFF3B82F6),
-            ),
+            child: const Icon(Icons.inventory_2, color: Colors.blue),
           ),
-          const SizedBox(width: 16),
-
-          // Info Produk (Nama & SKU & Stok)
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -419,22 +502,19 @@ class _DashboardPageState extends State<DashboardPage> {
                     fontSize: 15,
                   ),
                 ),
-                const SizedBox(height: 4),
                 Text(
                   "SKU: ${item.sku}",
-                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 11),
                 ),
-                const SizedBox(height: 8), // Jarak ke Stok
-                // Stok & Alert pindah ke bawah sini
+                const SizedBox(height: 8),
+
                 Row(
                   children: [
                     Text(
-                      "${item.stock} unit",
+                      "${item.stock} Unit",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: isLowStock
-                            ? const Color(0xFFF59E0B)
-                            : const Color(0xFF10B981), // Warna orange/hijau
+                        color: isLowStock ? Colors.red : Colors.green,
                         fontSize: 13,
                       ),
                     ),
@@ -442,13 +522,13 @@ class _DashboardPageState extends State<DashboardPage> {
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
+                          horizontal: 6,
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFF7ED), // Orange muda banget
+                          color: const Color(0xFFFFF7ED),
                           border: Border.all(color: const Color(0xFFFDBA74)),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Text(
                           "Stok Rendah",
@@ -465,24 +545,19 @@ class _DashboardPageState extends State<DashboardPage> {
               ],
             ),
           ),
-
-          // Bagian Kanan (Kategori & Edit/Hapus)
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(20), // Chip bulat
+                  borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   item.category,
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 10,
                     color: Colors.black54,
                     fontWeight: FontWeight.w600,
                   ),
@@ -492,15 +567,7 @@ class _DashboardPageState extends State<DashboardPage> {
               Row(
                 children: [
                   InkWell(
-                    onTap: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (c) => TambahProdukPage(product: item),
-                        ),
-                      );
-                      if (result == true) _refreshProducts();
-                    },
+                    onTap: onEdit,
                     child: Icon(
                       Icons.edit_outlined,
                       size: 20,
@@ -509,10 +576,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   const SizedBox(width: 12),
                   InkWell(
-                    onTap: () async {
-                      await apiService.deleteProduct(item.id);
-                      _refreshProducts();
-                    },
+                    onTap: onDelete,
                     child: const Icon(
                       Icons.delete_outline,
                       size: 20,
