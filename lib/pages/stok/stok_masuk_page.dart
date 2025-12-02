@@ -43,10 +43,10 @@ class _StokMasukPageState extends State<StokMasukPage> {
     return Scaffold(
       backgroundColor: const Color(0xfff5f6fa),
       appBar: AppBar(
-        title: const Text("Stok Masuk", style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
+        title: const Text("Stok Masuk", style: TextStyle(color: Colors.black)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -58,6 +58,7 @@ class _StokMasukPageState extends State<StokMasukPage> {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             ),
             const SizedBox(height: 6),
+
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
@@ -98,6 +99,19 @@ class _StokMasukPageState extends State<StokMasukPage> {
               decoration: _textFieldStyle("0"),
             ),
 
+            const SizedBox(height: 20),
+
+            const Text(
+              "Catatan (Opsional)",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+            const SizedBox(height: 6),
+            TextField(
+              controller: catatanController,
+              maxLines: 3,
+              decoration: _textFieldStyle("Tambahkan catatan..."),
+            ),
+
             const SizedBox(height: 30),
 
             SizedBox(
@@ -114,7 +128,7 @@ class _StokMasukPageState extends State<StokMasukPage> {
                 child: isSaving
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text(
-                        "Simpan Stok",
+                        "Simpan Stok Masuk",
                         style: TextStyle(fontSize: 16, color: Colors.white),
                       ),
               ),
@@ -127,14 +141,15 @@ class _StokMasukPageState extends State<StokMasukPage> {
 
   Future<void> _simpanStokMasuk() async {
     if (selectedProduct == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Pilih produk dulu!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Pilih produk terlebih dahulu")),
+      );
       return;
     }
 
-    int jumlah = int.tryParse(jumlahController.text) ?? 0;
-    if (jumlah <= 0) {
+    int jumlahMasuk = int.tryParse(jumlahController.text) ?? 0;
+
+    if (jumlahMasuk <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Jumlah harus lebih dari 0")),
       );
@@ -143,35 +158,31 @@ class _StokMasukPageState extends State<StokMasukPage> {
 
     setState(() => isSaving = true);
 
-    Product updatedProduct = Product(
-      id: selectedProduct!.id,
-      name: selectedProduct!.name,
-      sku: selectedProduct!.sku,
-      category: selectedProduct!.category,
-      price: selectedProduct!.price,
-      stock: selectedProduct!.stock + jumlah,
+    bool success = await apiService.addTransaction(
+      selectedProduct!.id,
+      'IN',
+      jumlahMasuk,
+      catatanController.text,
     );
-
-    bool success = await apiService.updateProduct(updatedProduct);
 
     setState(() => isSaving = false);
 
     if (success) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "Stok ${selectedProduct!.name} bertambah jadi ${updatedProduct.stock}!",
-            ),
+          const SnackBar(
+            content: Text("Stok masuk berhasil dicatat!"),
+            backgroundColor: Colors.blue,
           ),
         );
         Navigator.pop(context);
       }
     } else {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text("Gagal update stok")));
+        ).showSnackBar(const SnackBar(content: Text("Gagal transaksi")));
+      }
     }
   }
 
@@ -180,6 +191,7 @@ class _StokMasukPageState extends State<StokMasukPage> {
       hintText: hint,
       filled: true,
       fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
