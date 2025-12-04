@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../utils/theme_config.dart';
+import '../../utils/user_session.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const String userName = "Gabzy";
-    const String userEmail = "gabrielstudyacc@gmail.com";
+    String userName = UserSession.name ?? "Tamu";
+    String userEmail = UserSession.email ?? "Belum login";
 
     bool isDarkMode = themeNotifier.value == ThemeMode.dark;
+    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Profil")),
+      appBar: AppBar(title: const Text("Profil Saya")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -24,16 +26,26 @@ class ProfilePage extends StatelessWidget {
               child: Icon(Icons.person, size: 50, color: Colors.white),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               userName,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: theme.textTheme.bodyLarge?.color,
+              ),
             ),
-            Text(userEmail, style: TextStyle(color: Colors.grey[600])),
+            Text(
+              userEmail,
+              style: TextStyle(
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              ),
+            ),
+
             const SizedBox(height: 40),
 
             Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
@@ -46,10 +58,25 @@ class ProfilePage extends StatelessWidget {
               child: Column(
                 children: [
                   SwitchListTile(
-                    title: Text(isDarkMode ? "Mode Gelap" : "Mode Terang"),
+                    title: Text(
+                      isDarkMode ? "Mode Gelap" : "Mode Terang",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: theme.textTheme.bodyLarge?.color,
+                      ),
+                    ),
+                    subtitle: Text(
+                      isDarkMode
+                          ? "Aplikasi dalam tema gelap"
+                          : "Aplikasi dalam tema terang",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDarkMode ? Colors.grey : Colors.grey[600],
+                      ),
+                    ),
                     secondary: Icon(
                       isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                      color: isDarkMode ? Colors.white : Colors.orange,
+                      color: isDarkMode ? Colors.blue[200] : Colors.orange,
                     ),
                     value: isDarkMode,
                     onChanged: (bool value) {
@@ -76,7 +103,7 @@ class ProfilePage extends StatelessWidget {
 
             Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: ListTile(
@@ -86,6 +113,7 @@ class ProfilePage extends StatelessWidget {
                   style: TextStyle(color: Colors.red),
                 ),
                 onTap: () {
+                  UserSession.clearSession();
                   Navigator.pushNamedAndRemoveUntil(
                     context,
                     '/login',

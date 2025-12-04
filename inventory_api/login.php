@@ -8,7 +8,7 @@ if (isset($data['email']) && isset($data['password'])) {
     $email = $data['email'];
     $password = $data['password'];
 
-    $stmt = $connect->prepare("SELECT id, name, password FROM users WHERE email = ?");
+    $stmt = $connect->prepare("SELECT id, name, email, password FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -21,7 +21,8 @@ if (isset($data['email']) && isset($data['password'])) {
                 'message' => 'Login berhasil',
                 'user' => [
                     'id' => $user['id'],
-                    'name' => $user['name']
+                    'name' => $user['name'],
+                    'email' => $user['email'] 
                 ]
             ]);
         } else {
@@ -30,5 +31,7 @@ if (isset($data['email']) && isset($data['password'])) {
     } else {
         echo json_encode(['success' => false, 'message' => 'Email tidak ditemukan']);
     }
+} else {
+    echo json_encode(['success' => false, 'message' => 'Data tidak lengkap']);
 }
 ?>

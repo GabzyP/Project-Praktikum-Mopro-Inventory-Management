@@ -86,7 +86,7 @@ class _DashboardPageState extends State<DashboardPage> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          "Pengelola Inventori by Kelompok 1",
+          "Kelompok 1",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: theme.appBarTheme.foregroundColor,
@@ -124,21 +124,6 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Dashboard",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      "Ringkasan inventori hari ini",
-                      style: TextStyle(
-                        color: isDark ? Colors.grey[400] : Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
                     GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
