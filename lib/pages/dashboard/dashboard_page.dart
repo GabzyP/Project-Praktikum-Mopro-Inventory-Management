@@ -64,6 +64,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     int totalProduk = _allProducts.length;
     int stokRendah = _allProducts.where((p) => p.stock < 5).length;
 
@@ -80,27 +83,29 @@ class _DashboardPageState extends State<DashboardPage> {
     double childAspect = screenWidth < 600 ? 1.4 : 1.2;
 
     return Scaffold(
-      backgroundColor: const Color(0xfff8f9fd),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
-          "Inventori Barang",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+        title: Text(
+          "Pengelola Inventori by Kelompok 1",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: theme.appBarTheme.foregroundColor,
+          ),
         ),
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: theme.appBarTheme.backgroundColor,
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none, color: Colors.black54),
-            onPressed: () {
-              Navigator.pushNamed(context, '/notifikasi');
-            },
+            icon: Icon(
+              Icons.notifications_none,
+              color: isDark ? Colors.white70 : Colors.black54,
+            ),
+            onPressed: () => Navigator.pushNamed(context, '/notifikasi'),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: InkWell(
-              onTap: () {
-                Navigator.pushNamed(context, '/profil');
-              },
+              onTap: () => Navigator.pushNamed(context, '/profil'),
               child: const CircleAvatar(
                 radius: 16,
                 backgroundColor: Colors.blue,
@@ -126,9 +131,11 @@ class _DashboardPageState extends State<DashboardPage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const Text(
+                    Text(
                       "Ringkasan inventori hari ini",
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[400] : Colors.grey,
+                      ),
                     ),
                     const SizedBox(height: 20),
 
@@ -250,21 +257,31 @@ class _DashboardPageState extends State<DashboardPage> {
                     TextField(
                       controller: searchController,
                       onChanged: _runFilter,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
                       decoration: InputDecoration(
                         hintText: "Cari produk atau SKU...",
+                        hintStyle: TextStyle(
+                          color: isDark ? Colors.grey[500] : Colors.grey,
+                        ),
                         prefixIcon: const Icon(
                           Icons.search,
                           color: Colors.grey,
                         ),
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: theme.cardColor,
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 0,
                           horizontal: 20,
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Colors.grey.shade200),
+                          borderSide: BorderSide(
+                            color: isDark
+                                ? Colors.grey[800]!
+                                : Colors.grey.shade200,
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -279,7 +296,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(40),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: theme.cardColor,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Column(
@@ -332,6 +349,8 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 }
+
+// === WIDGET TAMBAHAN (INI YANG HILANG TADI) ===
 
 class _HoverCard extends StatefulWidget {
   final String title, value;
@@ -421,24 +440,29 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       child: Container(
         height: 50,
         decoration: BoxDecoration(
-          color: const Color(0xffeef2f6),
+          color: isDark ? const Color(0xFF2C2C2C) : const Color(0xffeef2f6),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 18, color: Colors.black87),
+            Icon(
+              icon,
+              size: 18,
+              color: isDark ? Colors.white70 : Colors.black87,
+            ),
             const SizedBox(height: 2),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
-                color: Colors.black87,
+                color: isDark ? Colors.white70 : Colors.black87,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
@@ -462,18 +486,23 @@ class _ProductItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     bool isLowStock = item.stock < 5;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(12),
         border: isLowStock
             ? Border.all(color: Colors.orange.shade200)
-            : Border.all(color: Colors.grey.shade100),
+            : Border.all(
+                color: isDark ? Colors.grey[800]! : Colors.grey.shade100,
+              ),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade100,
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -485,7 +514,9 @@ class _ProductItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: isDark
+                  ? Colors.blue.withOpacity(0.2)
+                  : Colors.blue.shade50,
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(Icons.inventory_2, color: Colors.blue),
@@ -497,14 +528,18 @@ class _ProductItem extends StatelessWidget {
               children: [
                 Text(
                   item.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
+                    color: theme.textTheme.bodyLarge?.color,
                   ),
                 ),
                 Text(
                   "SKU: ${item.sku}",
-                  style: TextStyle(color: Colors.grey[600], fontSize: 11),
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    fontSize: 11,
+                  ),
                 ),
                 const SizedBox(height: 8),
 
@@ -551,14 +586,14 @@ class _ProductItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: isDark ? Colors.grey[800] : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   item.category,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
-                    color: Colors.black54,
+                    color: isDark ? Colors.white70 : Colors.black54,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -571,7 +606,7 @@ class _ProductItem extends StatelessWidget {
                     child: Icon(
                       Icons.edit_outlined,
                       size: 20,
-                      color: Colors.grey.shade400,
+                      color: isDark ? Colors.grey[400] : Colors.grey.shade400,
                     ),
                   ),
                   const SizedBox(width: 12),
