@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/api_service.dart';
 import 'register_page.dart';
+import '../../utils/user_session.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,8 +18,11 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
         child: SingleChildScrollView(
           child: Container(
@@ -40,36 +44,55 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
+
+                Text(
                   "Selamat Datang",
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: theme.textTheme.bodyLarge?.color,
+                  ),
                 ),
-                const Text(
+                Text(
                   "Masuk untuk mengelola inventori",
-                  style: TextStyle(color: Colors.grey),
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[400] : Colors.grey,
+                  ),
                 ),
                 const SizedBox(height: 40),
 
                 TextField(
                   controller: emailC,
+                  keyboardType: TextInputType.emailAddress,
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
                   decoration: InputDecoration(
                     labelText: "Email",
+                    hintText: "gabrielstudyacc@gmail.com",
+                    hintStyle: TextStyle(
+                      color: isDark ? Colors.grey[600] : Colors.grey[400],
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     prefixIcon: const Icon(Icons.email_outlined),
+                    filled: true,
+                    fillColor: theme.cardColor,
                   ),
                 ),
                 const SizedBox(height: 16),
+
                 TextField(
                   controller: passC,
                   obscureText: true,
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
                   decoration: InputDecoration(
                     labelText: "Password",
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     prefixIcon: const Icon(Icons.lock_outline),
+                    filled: true,
+                    fillColor: theme.cardColor,
                   ),
                 ),
                 const SizedBox(height: 30),
@@ -102,7 +125,12 @@ class _LoginPageState extends State<LoginPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Belum punya akun?"),
+                    Text(
+                      "Belum punya akun?",
+                      style: TextStyle(
+                        color: theme.textTheme.bodyMedium?.color,
+                      ),
+                    ),
                     TextButton(
                       onPressed: () {
                         Navigator.push(
@@ -125,36 +153,58 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
-    if (emailC.text.isEmpty || passC.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Email dan Password harus diisi")),
-      );
+    String email = emailC.text.trim();
+    String password = passC.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showError("Email dan Password harus diisi");
+      return;
+    }
+    if (!email.contains("@") || !email.contains(".")) {
+      _showError("Format email tidak valid");
+      return;
+    }
+    if (password.length < 6) {
+      _showError("Password minimal 6 karakter");
       return;
     }
 
     setState(() => isLoading = true);
-    final result = await apiService.login(emailC.text, passC.text);
+
+    final result = await apiService.login(email, password);
+
     setState(() => isLoading = false);
 
     if (result['success'] == true) {
+      var userData = result['user'];
+
+      int userId = int.tryParse(userData['id'].toString()) ?? 0;
+      String userName = userData['name'] ?? "User";
+      String userEmail = userData['email'] ?? "";
+
+      UserSession.saveSession(userId, userName, userEmail);
+      // -----------------------------
+
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/dashboard');
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Selamat datang, ${result['user']['name']}!"),
+            content: Text("Selamat datang, $userName!"),
             backgroundColor: Colors.green,
           ),
         );
       }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? "Login gagal"),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showError(result['message'] ?? "Login gagal");
       }
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
   }
 }

@@ -25,17 +25,10 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.person_add_alt_1_rounded,
-                  size: 50,
-                  color: Colors.blue,
-                ),
+              const Icon(
+                Icons.person_add_alt_1_rounded,
+                size: 60,
+                color: Colors.blue,
               ),
               const SizedBox(height: 20),
               const Text(
@@ -44,7 +37,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const Text(
                 "Silakan daftar untuk melanjutkan",
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(color: Color.fromARGB(255, 12, 12, 12)),
               ),
               const SizedBox(height: 30),
 
@@ -61,8 +54,10 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 16),
               TextField(
                 controller: emailC,
+                keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   labelText: "Email",
+                  hintText: "gabrielstudyacc@gmail.com",
                   prefixIcon: const Icon(Icons.email_outlined),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -75,6 +70,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: "Password",
+                  hintText: "Minimal 6 karakter",
                   prefixIcon: const Icon(Icons.lock_outline),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -125,19 +121,27 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Future<void> _handleRegister() async {
-    if (nameC.text.isEmpty || emailC.text.isEmpty || passC.text.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Semua kolom wajib diisi")));
+    String nama = nameC.text.trim();
+    String email = emailC.text.trim();
+    String password = passC.text.trim();
+
+    if (nama.isEmpty || email.isEmpty || password.isEmpty) {
+      _showError("Semua kolom wajib diisi");
+      return;
+    }
+    if (!email.contains("@") || !email.contains(".")) {
+      _showError("Format email tidak valid (harus ada @ dan .)");
+      return;
+    }
+    if (password.length < 6) {
+      _showError("Password minimal 6 karakter!");
       return;
     }
 
     setState(() => isLoading = true);
-    final result = await apiService.register(
-      nameC.text,
-      emailC.text,
-      passC.text,
-    );
+
+    final result = await apiService.register(nama, email, password);
+
     setState(() => isLoading = false);
 
     if (result['success'] == true) {
@@ -152,13 +156,14 @@ class _RegisterPageState extends State<RegisterPage> {
       }
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? "Gagal daftar"),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showError(result['message'] ?? "Gagal daftar");
       }
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
   }
 }
