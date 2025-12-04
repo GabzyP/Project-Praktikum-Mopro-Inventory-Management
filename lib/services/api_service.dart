@@ -4,7 +4,7 @@ import '../models/product_model.dart';
 import '../models/transaksi_model.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://10.165.55.179/inventory_api';
+  static const String baseUrl = 'http://10.168.10.138/inventory_api';
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
