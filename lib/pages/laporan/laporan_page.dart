@@ -22,16 +22,18 @@ class _LaporanPageState extends State<LaporanPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xfff5f6fa),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Laporan Transaksi",
-          style: TextStyle(color: Colors.black),
+          style: TextStyle(color: theme.appBarTheme.foregroundColor),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: theme.appBarTheme.backgroundColor,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: IconThemeData(color: theme.appBarTheme.foregroundColor),
       ),
       body: FutureBuilder<List<TransaksiModel>>(
         future: _transactionsFuture,
@@ -53,7 +55,7 @@ class _LaporanPageState extends State<LaporanPage> {
             padding: const EdgeInsets.all(12),
             itemCount: transactions.length,
             itemBuilder: (context, index) {
-              return _buildTransaksiCard(transactions[index]);
+              return _buildTransaksiCard(transactions[index], theme);
             },
           );
         },
@@ -61,15 +63,19 @@ class _LaporanPageState extends State<LaporanPage> {
     );
   }
 
-  Widget _buildTransaksiCard(TransaksiModel t) {
+  Widget _buildTransaksiCard(TransaksiModel t, ThemeData theme) {
     bool isMasuk = t.type == 'IN';
+    bool isDark = theme.brightness == Brightness.dark;
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      color: Colors.white,
+      color: theme.cardColor,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(
+          color: isDark ? Colors.grey[800]! : Colors.grey.shade200,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -86,8 +92,8 @@ class _LaporanPageState extends State<LaporanPage> {
                   ),
                   decoration: BoxDecoration(
                     color: isMasuk
-                        ? Colors.green.shade100
-                        : Colors.red.shade100,
+                        ? Colors.green.withOpacity(isDark ? 0.2 : 0.1)
+                        : Colors.red.withOpacity(isDark ? 0.2 : 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -101,7 +107,10 @@ class _LaporanPageState extends State<LaporanPage> {
                 ),
                 Text(
                   DateFormat("d MMM yyyy, HH:mm", "id_ID").format(t.createdAt),
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[400] : Colors.grey.shade500,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -111,9 +120,10 @@ class _LaporanPageState extends State<LaporanPage> {
               children: [
                 Text(
                   t.productName,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: theme.textTheme.bodyLarge?.color,
                   ),
                 ),
                 Text(
@@ -130,7 +140,10 @@ class _LaporanPageState extends State<LaporanPage> {
               const SizedBox(height: 6),
               Text(
                 "Catatan: ${t.notes}",
-                style: const TextStyle(color: Colors.black54, fontSize: 13),
+                style: TextStyle(
+                  color: isDark ? Colors.grey[400] : Colors.black54,
+                  fontSize: 13,
+                ),
               ),
             ],
           ],

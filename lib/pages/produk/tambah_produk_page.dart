@@ -37,7 +37,6 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
       namaController.text = widget.product!.name;
       skuController.text = widget.product!.sku;
       stokController.text = widget.product!.stock.toString();
-
       if (categories.contains(widget.product!.category)) {
         selectedCategory = widget.product!.category;
       } else {
@@ -48,15 +47,18 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xfff5f6fa),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: theme.appBarTheme.backgroundColor,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: IconThemeData(color: theme.appBarTheme.foregroundColor),
         title: Text(
           isEditMode ? "Edit Barang" : "Tambah Barang Baru",
-          style: const TextStyle(color: Colors.black),
+          style: TextStyle(color: theme.appBarTheme.foregroundColor),
         ),
       ),
       body: SingleChildScrollView(
@@ -87,13 +89,15 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: selectedCategory,
                   isExpanded: true,
+                  dropdownColor: theme.cardColor,
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
                   items: categories.map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
@@ -180,9 +184,7 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
       );
       return;
     }
-
     setState(() => isLoading = true);
-
     Product productData = Product(
       id: isEditMode ? widget.product!.id : 0,
       name: namaController.text,
@@ -191,16 +193,13 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
       stock: int.tryParse(stokController.text) ?? 0,
       price: 0,
     );
-
     bool success;
     if (isEditMode) {
       success = await apiService.updateProduct(productData);
     } else {
       success = await apiService.addProduct(productData);
     }
-
     setState(() => isLoading = false);
-
     if (success) {
       if (mounted) {
         Navigator.pop(context, true);
@@ -227,14 +226,21 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
     bool isNumber = false,
     bool readOnly = false,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return TextField(
       controller: c,
       readOnly: readOnly,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      style: TextStyle(color: isDark ? Colors.white : Colors.black),
       decoration: InputDecoration(
         hintText: hint,
+        hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey),
         filled: true,
-        fillColor: readOnly ? Colors.grey.shade200 : Colors.white,
+        fillColor: readOnly
+            ? (isDark ? Colors.grey[800] : Colors.grey.shade200)
+            : theme.cardColor,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 14,

@@ -40,13 +40,19 @@ class _StokMasukPageState extends State<StokMasukPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xfff5f6fa),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        title: Text(
+          "Stok Masuk",
+          style: TextStyle(color: theme.appBarTheme.foregroundColor),
+        ),
+        backgroundColor: theme.appBarTheme.backgroundColor,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-        title: const Text("Stok Masuk", style: TextStyle(color: Colors.black)),
+        iconTheme: IconThemeData(color: theme.appBarTheme.foregroundColor),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -62,7 +68,7 @@ class _StokMasukPageState extends State<StokMasukPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: isLoading
@@ -73,8 +79,17 @@ class _StokMasukPageState extends State<StokMasukPage> {
                   : DropdownButtonHideUnderline(
                       child: DropdownButton<Product>(
                         value: selectedProduct,
-                        hint: const Text("Pilih produk..."),
+                        hint: Text(
+                          "Pilih produk...",
+                          style: TextStyle(
+                            color: isDark ? Colors.grey : Colors.black54,
+                          ),
+                        ),
                         isExpanded: true,
+                        dropdownColor: theme.cardColor,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
                         items: daftarProduk.map((Product item) {
                           return DropdownMenuItem<Product>(
                             value: item,
@@ -96,7 +111,8 @@ class _StokMasukPageState extends State<StokMasukPage> {
             TextField(
               controller: jumlahController,
               keyboardType: TextInputType.number,
-              decoration: _textFieldStyle("0"),
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+              decoration: _textFieldStyle("0", theme),
             ),
 
             const SizedBox(height: 20),
@@ -109,7 +125,8 @@ class _StokMasukPageState extends State<StokMasukPage> {
             TextField(
               controller: catatanController,
               maxLines: 3,
-              decoration: _textFieldStyle("Tambahkan catatan..."),
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+              decoration: _textFieldStyle("Tambahkan catatan...", theme),
             ),
 
             const SizedBox(height: 30),
@@ -148,7 +165,6 @@ class _StokMasukPageState extends State<StokMasukPage> {
     }
 
     int jumlahMasuk = int.tryParse(jumlahController.text) ?? 0;
-
     if (jumlahMasuk <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Jumlah harus lebih dari 0")),
@@ -171,26 +187,27 @@ class _StokMasukPageState extends State<StokMasukPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Stok masuk berhasil dicatat!"),
+            content: Text("Stok masuk berhasil!"),
             backgroundColor: Colors.blue,
           ),
         );
         Navigator.pop(context);
       }
     } else {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Gagal transaksi")));
-      }
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Gagal menyimpan transaksi")),
+        );
     }
   }
 
-  InputDecoration _textFieldStyle(String hint) {
+  InputDecoration _textFieldStyle(String hint, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
     return InputDecoration(
       hintText: hint,
+      hintStyle: TextStyle(color: isDark ? Colors.grey : Colors.black54),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: theme.cardColor,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

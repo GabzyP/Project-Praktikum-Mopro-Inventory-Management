@@ -40,13 +40,19 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xfff5f6fa),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        title: Text(
+          "Stok Keluar",
+          style: TextStyle(color: theme.appBarTheme.foregroundColor),
+        ),
+        backgroundColor: theme.appBarTheme.backgroundColor,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-        title: const Text("Stok Keluar", style: TextStyle(color: Colors.black)),
+        iconTheme: IconThemeData(color: theme.appBarTheme.foregroundColor),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -62,7 +68,7 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: isLoading
@@ -73,8 +79,17 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
                   : DropdownButtonHideUnderline(
                       child: DropdownButton<Product>(
                         value: selectedProduct,
-                        hint: const Text("Pilih produk..."),
+                        hint: Text(
+                          "Pilih produk...",
+                          style: TextStyle(
+                            color: isDark ? Colors.grey : Colors.black54,
+                          ),
+                        ),
                         isExpanded: true,
+                        dropdownColor: theme.cardColor,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
                         items: daftarProduk.map((Product item) {
                           return DropdownMenuItem<Product>(
                             value: item,
@@ -83,7 +98,7 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
                               style: TextStyle(
                                 color: item.stock == 0
                                     ? Colors.red
-                                    : Colors.black,
+                                    : (isDark ? Colors.white : Colors.black),
                               ),
                             ),
                           );
@@ -103,7 +118,8 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
             TextField(
               controller: jumlahController,
               keyboardType: TextInputType.number,
-              decoration: _textFieldStyle("0"),
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+              decoration: _textFieldStyle("0", theme),
             ),
 
             const SizedBox(height: 20),
@@ -116,7 +132,8 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
             TextField(
               controller: catatanController,
               maxLines: 3,
-              decoration: _textFieldStyle("Tambahkan catatan..."),
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+              decoration: _textFieldStyle("Tambahkan catatan...", theme),
             ),
 
             const SizedBox(height: 30),
@@ -165,8 +182,10 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
 
     if (jumlahKeluar > selectedProduct!.stock) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Stok tidak cukup!"),
+        SnackBar(
+          content: Text(
+            "Stok tidak cukup! Sisa hanya ${selectedProduct!.stock}",
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -188,26 +207,27 @@ class _StokKeluarPageState extends State<StokKeluarPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Stok keluar berhasil dicatat!"),
+            content: Text("Stok keluar berhasil!"),
             backgroundColor: Colors.blue,
           ),
         );
         Navigator.pop(context);
       }
     } else {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Gagal transaksi")));
-      }
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Gagal menyimpan transaksi")),
+        );
     }
   }
 
-  InputDecoration _textFieldStyle(String hint) {
+  InputDecoration _textFieldStyle(String hint, ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
     return InputDecoration(
       hintText: hint,
+      hintStyle: TextStyle(color: isDark ? Colors.grey : Colors.black54),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: theme.cardColor,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

@@ -9,11 +9,11 @@ import 'pages/stok/stok_keluar_page.dart';
 import 'pages/laporan/laporan_page.dart';
 import 'pages/other/notification_page.dart';
 import 'pages/other/profile_page.dart';
+import 'utils/theme_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id_ID', null);
-
   runApp(const MyApp());
 }
 
@@ -22,26 +22,30 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Inventory App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xfff5f6fa),
-      ),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, currentMode, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Inventory App',
 
-      initialRoute: '/login',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: currentMode,
 
-      routes: {
-        '/login': (context) => const LoginPage(),
-        '/dashboard': (context) => const DashboardPage(),
-        '/tambah-produk': (context) => const TambahProdukPage(),
-        '/stok-masuk': (context) => const StokMasukPage(),
-        '/stok-keluar': (context) => const StokKeluarPage(),
-        '/laporan': (context) => LaporanPage(),
-        '/notifikasi': (context) => const NotificationPage(),
-        '/profil': (context) => const ProfilePage(),
+          initialRoute: '/login',
+
+          routes: {
+            '/login': (context) => const LoginPage(),
+            '/dashboard': (context) => const DashboardPage(),
+            '/tambah-produk': (context) => const TambahProdukPage(),
+            '/stok-masuk': (context) => const StokMasukPage(),
+            '/stok-keluar': (context) => const StokKeluarPage(),
+            '/laporan': (context) => const LaporanPage(),
+            '/notifikasi': (context) => const NotificationPage(),
+            '/profil': (context) => const ProfilePage(),
+          },
+        );
       },
     );
   }
